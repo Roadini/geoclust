@@ -17,7 +17,6 @@ extern crate serde_json;
 
 use dotenv::dotenv;
 use std::env;
-use routes::*;
 
 mod db;
 mod models;
@@ -31,11 +30,25 @@ fn rocket() -> rocket::Rocket {
     let database_url = env::var("DATABASE_URL").expect("set DATABASE_URL");
 
     let pool = db::init_pool(database_url);
+
     rocket::ignite()
         .manage(pool)
         .mount(
             "/api/v1/",
-            routes![index, new, show, delete, author, update],
+            routes![
+                routes::books::index,
+                routes::books::new,
+                routes::books::show,
+                routes::books::delete,
+                routes::books::author,
+                routes::books::update,
+
+                routes::lists::index,
+                routes::lists::new,
+                routes::lists::show,
+                routes::lists::delete,
+                routes::lists::author,
+                routes::lists::update],
         )
         .mount("/", routes![static_files::all, static_files::index])
 }

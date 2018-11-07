@@ -1,40 +1,40 @@
 use db::Conn as DbConn;
 use rocket_contrib::json::Json;
-use super::models::{Book, NewBook};
+use models::lists::{List, NewList};
 use serde_json::Value;
 
-#[get("/books", format = "application/json")]
+#[get("/lists", format = "application/json")]
 pub fn index(conn: DbConn) -> Json<Value> {
-    let books = Book::all(&conn);
+    let lists = List::all(&conn);
 
     Json(json!({
         "status": 200,
-        "result": books,
+        "result": lists,
     }))
 }
 
-#[post("/books", format = "application/json", data = "<new_book>")]
-pub fn new(conn: DbConn, new_book: Json<NewBook>) -> Json<Value> {
+#[post("/lists", format = "application/json", data = "<new_list>")]
+pub fn new(conn: DbConn, new_list: Json<NewList>) -> Json<Value> {
     Json(json!({
-        "status": Book::insert(new_book.into_inner(), &conn),
-        "result": Book::all(&conn).first(),
+        "status": List::insert(new_list.into_inner(), &conn),
+        "result": List::all(&conn).first(),
     }))
 }
 
-#[get("/books/<id>", format = "application/json")]
+#[get("/list/<id>", format = "application/json")]
 pub fn show(conn: DbConn, id: i32) -> Json<Value> {
-    let result = Book::show(id, &conn);
+    let result = List::show(id, &conn);
     let status = if result.is_empty() { 404 } else { 200 };
 
     Json(json!({
-        "status": status, 
+        "status": status,
         "result": result.get(0),
     }))
 }
 
-#[put("/books/<id>", format = "application/json", data = "<book>")]
-pub fn update(conn: DbConn, id: i32, book: Json<NewBook>) -> Json<Value> {
-    let status = if Book::update_by_id(id, &conn, book.into_inner()) {
+#[put("/list/<id>", format = "application/json", data = "<list>")]
+pub fn update(conn: DbConn, id: i32, list: Json<NewList>) -> Json<Value> {
+    let status = if List::update_by_id(id, &conn, list.into_inner()) {
         200
     } else {
         404
@@ -46,24 +46,26 @@ pub fn update(conn: DbConn, id: i32, book: Json<NewBook>) -> Json<Value> {
     }))
 }
 
-#[delete("/books/<id>")]
+#[delete("/list/<id>")]
 pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
-    let status = if Book::delete_by_id(id, &conn) {
+    let status = if List::delete_by_id(id, &conn) {
         200
     } else {
         404
     };
+
     Json(json!({
         "status": status,
         "result": null,
     }))
+
 }
 
-#[get("/books/authors/<author>", format = "application/json")]
-pub fn author(author: String, conn: DbConn) -> Json<Value> {
+#[get("/lists/user/<user_id>", format = "application/json")]
+pub fn author(user_id: i32, conn: DbConn) -> Json<Value> {
     Json(json!({
         "status": 200,
-        "result": Book::all_by_author(author, &conn),
+        "result": List::all_by_user(user_id, &conn),
     }))
 }
 
