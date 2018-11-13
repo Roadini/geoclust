@@ -9,12 +9,14 @@ services:
       POSTGRES_PASSWORD: "demo1234"
     image: "kartoza/postgis:9.6-2.4"
     ports:
-      - "5432:5432"
+      - "5431:5431"
     volumes:
       - pgdata:/var/lib/postgresql
+    networks: 
+      - roadiniserver_proxynet
 
   api:
-    build: .
+    image: geoclust
     ports:
       - "3001:3001"
     volumes:
@@ -26,8 +28,15 @@ services:
     #   - CARGO_INCREMENTAL=1
     environment:
       DATABASE_URL: "postgres://roadini:demo1234@db/geoclust"
-    command: bash -c "bash ./wait-for-it.sh db:5432 -q -- diesel setup && cargo watch -x run"
+    command: bash -c "bash ./wait-for-it.sh db:5431 -q -- diesel setup && cargo watch -x run" 
+    networks: 
+      - roadiniserver_proxynet
+    container_name: geoclust_api
 
 # cargo will try to redownload packages @ docker-compose up so store them here.
 volumes:
   pgdata: {}
+
+networks: 
+    roadiniserver_proxynet:
+        external: true
