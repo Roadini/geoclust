@@ -20,3 +20,21 @@ Finnaly
 ```
 docker-compose up
 ```
+
+
+###### Extending Current API Usual Commands
+Theser are meant to be run inside the container
+
+- Generate migration
+
+example with visits
+```
+diesel migration generate create_visits
+```
+
+After writing new migration
+- Aply
+```
+diesel migration run
+```
+

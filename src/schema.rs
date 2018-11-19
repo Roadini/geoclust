@@ -25,8 +25,18 @@ table! {
     }
 }
 
+table! {
+    visits (id) {
+        id -> Int4,
+        list_id -> Int4,
+        internal_id_place -> Int4,
+        review -> Varchar,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     books,
     lists,
     spatial_ref_sys,
+    visits,
 );
