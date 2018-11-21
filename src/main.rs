@@ -43,6 +43,15 @@ fn rocket() -> rocket::Rocket {
                 routes::books::author,
                 routes::books::update,
 
+                routes::visits::new,
+                routes::visits::show_by_list,
+                routes::visits::delete,
+
+                routes::gspots::index,
+                routes::gspots::get_by_coord,
+                routes::gspots::show,
+                routes::gspots::delete,
+
                 routes::lists::index,
                 routes::lists::new,
                 routes::lists::show,

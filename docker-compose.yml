@@ -1,7 +1,5 @@
 version: "3"
-
 services:
-
   db:
     environment:
       POSTGRES_USER: "roadini"
@@ -12,7 +10,7 @@ services:
       - "5431:5432"
     volumes:
       - pgdata:/var/lib/postgresql
-    networks: 
+    networks:
       - roadiniserver_proxynet
 
   api:
@@ -28,8 +26,8 @@ services:
     #   - CARGO_INCREMENTAL=1
     environment:
       DATABASE_URL: "postgres://roadini:demo1234@db/geoclust"
-    command: bash -c "bash ./wait-for-it.sh db:5431 -q -- diesel setup && cargo watch -x run" 
-    networks: 
+    command: bash -c "bash ./wait-for-it.sh db:5432 -q -- diesel setup && cargo watch -x run"
+    networks:
       - roadiniserver_proxynet
     container_name: geoclust_api
 
@@ -37,6 +35,6 @@ services:
 volumes:
   pgdata: {}
 
-networks: 
+networks:
     roadiniserver_proxynet:
         external: true

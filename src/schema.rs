@@ -8,6 +8,19 @@ table! {
 }
 
 table! {
+    gspots (id) {
+        id -> Int4,
+        name -> Varchar,
+        address -> Varchar,
+        google_place_id -> Varchar,
+        lat -> Float4,
+        lng -> Float4,
+        primary_type -> Varchar,
+        secondary_type -> Varchar,
+    }
+}
+
+table! {
     lists (id) {
         id -> Int4,
         user_id -> Int4,
@@ -25,8 +38,19 @@ table! {
     }
 }
 
+table! {
+    visits (id) {
+        id -> Int4,
+        list_id -> Int4,
+        internal_id_place -> Int4,
+        review -> Varchar,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     books,
+    gspots,
     lists,
     spatial_ref_sys,
+    visits,
 );
