@@ -1,5 +1,7 @@
 extern crate reqwest;
 
+use dotenv::dotenv;
+use std::env;
 use db::Conn as DbConn;
 use rocket_contrib::json::Json;
 use models::gspots::{GSpot};
@@ -31,12 +33,15 @@ pub fn get_possible_gspots( lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
 #[get("/gspots/populate?<lat>&<lng>", format = "application/json")]
 pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
     println!("Coordenadas. Lat: {} Lng: {}",lat, lng);
+    dotenv().ok();
+    let api_key = env::var("API_KEY").expect("set DATABASE_URL");
+
 
     let request_url = format!("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=*\
             &inputtype=textquery\
             &fields=formatted_address,name,place_id,types\
             &locationbias=circle:50@{},{}\
-            &key=AIzaSyCtfMl7IYoqljjQjxW6n0WLbRwM-L5iOcM",lat, lng);
+            &key={}",lat, lng,api_key);
 
 
     let mut response = reqwest::get(&request_url)
