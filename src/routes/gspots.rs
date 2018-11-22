@@ -1,6 +1,9 @@
+extern crate reqwest;
+
 use db::Conn as DbConn;
 use rocket_contrib::json::Json;
-use models::gspots::{GSpot, NewGSpot};
+use models::gspots::{GSpot};
+use models::google_responses::{Candidate, GoogleResponse};
 use serde_json::Value;
 
 #[get("/gspots", format = "application/json")]
@@ -14,13 +17,43 @@ pub fn index(conn: DbConn) -> Json<Value> {
 }
 
 #[get("/gspots?<lat>&<lng>", format = "application/json")]
-pub fn get_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
+pub fn get_possible_gspots( lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
 
-    let gspots = format!("Coordenadas. Lat: {} Lng: {}",lat, lng);
+    // TODO: Make this right!
+    let gspots = GSpot::all(&conn);
 
     Json(json!({
         "status": 200,
         "result": gspots,
+    }))
+}
+
+#[get("/gspots/populate?<lat>&<lng>", format = "application/json")]
+pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
+    println!("Coordenadas. Lat: {} Lng: {}",lat, lng);
+
+    let request_url = format!("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=*\
+            &inputtype=textquery\
+            &fields=formatted_address,name,place_id,types\
+            &locationbias=circle:50@{},{}\
+            &key=AIzaSyCtfMl7IYoqljjQjxW6n0WLbRwM-L5iOcM",lat, lng);
+
+
+    let mut response = reqwest::get(&request_url)
+        .expect("Que treta");
+
+    let gr: GoogleResponse = response.json::<GoogleResponse>()
+        .expect("Upsi Dupsi");
+
+    for x in &gr.candidates {
+        let mut candidate_name = x.name.as_str();
+        println!("Adding token Candidate ... {}", candidate_name);
+        GSpot::insert(Candidate::to_gspot(x), &conn);
+    }
+
+    Json(json!({
+        "status": 200,
+        "result": format!("{:#?}",gr.candidates[0].name),
     }))
 }
 
@@ -46,6 +79,28 @@ pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
     Json(json!({
         "status": status,
         "result": null,
+    }))
+}
+
+// MAGIC STUFF
+#[get("/magic", format = "application/json")]
+pub fn get_route_suggestion(conn: DbConn) -> Json<Value> {
+    let gspots = GSpot::all(&conn);
+
+    Json(json!({
+        "status": 200,
+        "result": gspots,
+    }))
+}
+
+#[get("/magic?<type_of_place>", format = "application/json")]
+pub fn change_route_suggestion(type_of_place: String, conn: DbConn) -> Json<Value> {
+    println!("Tipo de lugar para alterar {}",type_of_place);
+    let gspots = GSpot::all(&conn);
+
+    Json(json!({
+        "status": 200,
+        "result": gspots.get(0),
     }))
 }
 

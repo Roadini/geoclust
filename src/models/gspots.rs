@@ -38,6 +38,14 @@ impl GSpot {
             .expect("Error loading List")
     }
 
+    pub fn get_by_google_id(g_id: String, conn: &PgConnection) -> Vec<GSpot> {
+        all_gspots
+            .filter(gspots::google_place_id.eq(g_id))
+            .load::<GSpot>(conn)
+            .expect("Error loading lists by User")
+
+    }
+
     pub fn all(conn: &PgConnection) -> Vec<GSpot> {
         all_gspots
             .order(gspots::id.desc())
@@ -58,9 +66,13 @@ impl GSpot {
     //        .is_ok()
     //}
 
-    pub fn insert(conn: &PgConnection) -> bool {
-        // TODO :/
-        return true
+    pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> bool {
+
+        diesel::insert_into(gspots::table)
+            .values(&gspot)
+            .execute(conn)
+            .is_ok()
+
     }
 
     pub fn delete_by_id(id: i32, conn: &PgConnection) -> bool {
