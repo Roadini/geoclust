@@ -48,9 +48,12 @@ fn rocket() -> rocket::Rocket {
                 routes::visits::delete,
 
                 routes::gspots::index,
-                routes::gspots::get_by_coord,
+                routes::gspots::get_possible_gspots,
+                routes::gspots::populate_by_coord,
                 routes::gspots::show,
                 routes::gspots::delete,
+                routes::gspots::get_route_suggestion,
+                routes::gspots::change_route_suggestion,
 
                 routes::lists::index,
                 routes::lists::new,
