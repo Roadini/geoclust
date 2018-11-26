@@ -66,12 +66,23 @@ impl GSpot {
     //        .is_ok()
     //}
 
-    pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> bool {
+    pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> Vec<i32> {
 
-        diesel::insert_into(gspots::table)
+        let inserted_id = diesel::insert_into(gspots::table)
             .values(&gspot)
-            .execute(conn)
-            .is_ok()
+            .returning(gspots::id)
+            .get_results(conn);
+
+
+
+        let inserted_id = match inserted_id{
+            Ok(inserted_id) => inserted_id,
+            Err(error) => {
+                panic!("There was a problem  {:?}", error)
+            },
+        };
+
+        return inserted_id
 
     }
 
