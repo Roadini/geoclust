@@ -18,7 +18,7 @@ pub fn show_by_list(conn: DbConn, list_id: i32) -> Json<Value> {
 
     Json(json!({
         "status": status,
-        "result": result.get(0),
+        "result": result,
     }))
 }
 

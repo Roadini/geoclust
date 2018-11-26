@@ -103,7 +103,7 @@ pub fn populate_photos_by_coord(photo_id: String, place_internal_id: i32) {
     //    extension = splits[1].to_string();
     //}
 
-    let file_name = format!("public/{}.{}", place_internal_id.to_string(), extension);
+    let file_name = format!("public/{}.{}", place_internal_id.to_string(), "jpeg");
 
     let path = Path::new(&file_name);
 
