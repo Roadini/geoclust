@@ -1,6 +1,6 @@
 use db::Conn as DbConn;
-use rocket_contrib::json::Json;
 use models::books::{Book, NewBook};
+use rocket_contrib::json::Json;
 use serde_json::Value;
 
 #[get("/books", format = "application/json")]
@@ -27,7 +27,7 @@ pub fn show(conn: DbConn, id: i32) -> Json<Value> {
     let status = if result.is_empty() { 404 } else { 200 };
 
     Json(json!({
-        "status": status, 
+        "status": status,
         "result": result.get(0),
     }))
 }
@@ -66,7 +66,6 @@ pub fn author(author: String, conn: DbConn) -> Json<Value> {
         "result": Book::all_by_author(author, &conn),
     }))
 }
-
 
 //#[catch(404)]
 //fn not_found() -> Json<Value> {

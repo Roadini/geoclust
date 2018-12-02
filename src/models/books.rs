@@ -1,6 +1,6 @@
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 
 use schema::books;
 use schema::books::dsl::books as all_books;

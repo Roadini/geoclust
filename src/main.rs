@@ -1,4 +1,11 @@
-#![feature(plugin, custom_derive, const_fn, decl_macro, custom_attribute, proc_macro_hygiene)]
+#![feature(
+    plugin,
+    custom_derive,
+    const_fn,
+    decl_macro,
+    custom_attribute,
+    proc_macro_hygiene
+)]
 #![allow(proc_macro_derive_resolution_fallback, unused_attributes)]
 
 #[macro_use]
@@ -42,11 +49,9 @@ fn rocket() -> rocket::Rocket {
                 routes::books::delete,
                 routes::books::author,
                 routes::books::update,
-
                 routes::visits::new,
                 routes::visits::show_by_list,
                 routes::visits::delete,
-
                 routes::gspots::index,
                 routes::gspots::get_possible_gspots,
                 routes::gspots::populate_by_coord,
@@ -54,13 +59,13 @@ fn rocket() -> rocket::Rocket {
                 routes::gspots::delete,
                 routes::gspots::get_route_suggestion,
                 routes::gspots::change_route_suggestion,
-
                 routes::lists::index,
                 routes::lists::new,
                 routes::lists::show,
                 routes::lists::delete,
                 routes::lists::author,
-                routes::lists::update],
+                routes::lists::update
+            ],
         )
         .mount("/", routes![static_files::all, static_files::index])
 }
@@ -68,4 +73,3 @@ fn rocket() -> rocket::Rocket {
 fn main() {
     rocket().launch();
 }
-

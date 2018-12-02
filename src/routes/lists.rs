@@ -1,6 +1,6 @@
 use db::Conn as DbConn;
-use rocket_contrib::json::Json;
 use models::lists::{List, NewList};
+use rocket_contrib::json::Json;
 use serde_json::Value;
 
 #[get("/lists", format = "application/json")]
@@ -58,7 +58,6 @@ pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
         "status": status,
         "result": null,
     }))
-
 }
 
 #[get("/lists/user/<user_id>", format = "application/json")]
@@ -68,7 +67,6 @@ pub fn author(user_id: i32, conn: DbConn) -> Json<Value> {
         "result": List::all_by_user(user_id, &conn),
     }))
 }
-
 
 //#[catch(404)]
 //fn not_found() -> Json<Value> {

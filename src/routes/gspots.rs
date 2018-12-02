@@ -1,16 +1,16 @@
 extern crate reqwest;
 
-use dotenv::dotenv;
-use std::env;
 use db::Conn as DbConn;
-use rocket_contrib::json::Json;
-use models::gspots::{GSpot};
+use dotenv::dotenv;
 use models::google_responses::{Candidate, GoogleResponse};
+use models::gspots::GSpot;
+use rocket_contrib::json::Json;
 use serde_json::Value;
+use std::env;
 
 use std::error::Error;
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::Path;
 
 #[get("/gspots", format = "application/json")]
@@ -24,8 +24,7 @@ pub fn index(conn: DbConn) -> Json<Value> {
 }
 
 #[get("/gspots?<lat>&<lng>", format = "application/json")]
-pub fn get_possible_gspots( lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
-
+pub fn get_possible_gspots(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
     // TODO: Make this right!
     let gspots = GSpot::all(&conn);
 
@@ -37,34 +36,32 @@ pub fn get_possible_gspots( lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
 
 #[get("/gspots/populate?<lat>&<lng>", format = "application/json")]
 pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
-
-    println!("Coordenadas. Lat: {} Lng: {}",lat, lng);
+    println!("Coordenadas. Lat: {} Lng: {}", lat, lng);
 
     dotenv().ok();
     let api_key = env::var("API_KEY").expect("set DATABASE_URL");
 
+    let request_url = format!(
+        "https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=*\
+         &inputtype=textquery\
+         &fields=formatted_address,geometry,id,name,permanently_closed,photos,place_id,types\
+         &locationbias=circle:50@{},{}\
+         &key={}",
+        lat, lng, api_key
+    );
 
-    let request_url = format!("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=*\
-            &inputtype=textquery\
-            &fields=formatted_address,geometry,id,name,permanently_closed,photos,place_id,types\
-            &locationbias=circle:50@{},{}\
-            &key={}",lat, lng,api_key);
+    let mut response = reqwest::get(&request_url).expect("Que treta");
 
-    let mut response = reqwest::get(&request_url)
-        .expect("Que treta");
-
-    let gr: GoogleResponse = response.json::<GoogleResponse>()
-        .expect("Upsi Dupsi");
+    let gr: GoogleResponse = response.json::<GoogleResponse>().expect("Upsi Dupsi");
 
     for x in &gr.candidates {
         let mut candidate_name = x.name.as_str();
-        let mut inserted_id : i32 = 0;
+        let mut inserted_id: i32 = 0;
         println!("Adding token Candidate ... {}", candidate_name);
         inserted_id = GSpot::insert(Candidate::to_gspot(x), &conn)[0];
 
-
         populate_photos_by_coord(Candidate::get_photo_id(x), inserted_id);
-    };
+    }
 
     Json(json!({
         "status": 200,
@@ -72,23 +69,27 @@ pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
 }
 
 pub fn populate_photos_by_coord(photo_id: String, place_internal_id: i32) {
-
-    if(photo_id == "error"){
+    if (photo_id == "error") {
         return;
     }
 
-    println!("photo_id : {} place_internal_id: {}", photo_id, place_internal_id);
+    println!(
+        "photo_id : {} place_internal_id: {}",
+        photo_id, place_internal_id
+    );
 
     dotenv().ok();
     let api_key = env::var("API_KEY").expect("set DATABASE_URL");
 
-    let request_url = format!("https://maps.googleapis.com/maps/api/place/photo? \
-            &photoreference={}\
-            &maxwidth=400\
-            &key={}",photo_id, api_key);
+    let request_url = format!(
+        "https://maps.googleapis.com/maps/api/place/photo? \
+         &photoreference={}\
+         &maxwidth=400\
+         &key={}",
+        photo_id, api_key
+    );
 
-    let mut response = reqwest::get(&request_url)
-        .expect("Que treta");
+    let mut response = reqwest::get(&request_url).expect("Que treta");
 
     // TODO:: FIX
     //let mut extension = "jpeg".to_string();
@@ -116,7 +117,7 @@ pub fn populate_photos_by_coord(photo_id: String, place_internal_id: i32) {
 
     let mut buffer = Vec::new();
 
-    match response.read_to_end(&mut buffer){
+    match response.read_to_end(&mut buffer) {
         Err(why) => panic!("Something went Wrong Reading Response"),
 
         Ok(_) => println!("Successfully read Response"),
@@ -166,7 +167,7 @@ pub fn get_route_suggestion(conn: DbConn) -> Json<Value> {
 
 #[get("/magic?<type_of_place>", format = "application/json")]
 pub fn change_route_suggestion(type_of_place: String, conn: DbConn) -> Json<Value> {
-    println!("Tipo de lugar para alterar {}",type_of_place);
+    println!("Tipo de lugar para alterar {}", type_of_place);
     let gspots = GSpot::all(&conn);
 
     Json(json!({
