@@ -1,6 +1,6 @@
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 
 use schema::gspots;
 use schema::gspots::dsl::gspots as all_gspots;
@@ -30,7 +30,6 @@ pub struct NewGSpot {
 }
 
 impl GSpot {
-
     pub fn show(id: i32, conn: &PgConnection) -> Vec<GSpot> {
         all_gspots
             .find(id)
@@ -43,7 +42,6 @@ impl GSpot {
             .filter(gspots::google_place_id.eq(g_id))
             .load::<GSpot>(conn)
             .expect("Error loading lists by User")
-
     }
 
     pub fn all(conn: &PgConnection) -> Vec<GSpot> {
@@ -67,23 +65,17 @@ impl GSpot {
     //}
 
     pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> Vec<i32> {
-
         let inserted_id = diesel::insert_into(gspots::table)
             .values(&gspot)
             .returning(gspots::id)
             .get_results(conn);
 
-
-
-        let inserted_id = match inserted_id{
+        let inserted_id = match inserted_id {
             Ok(inserted_id) => inserted_id,
-            Err(error) => {
-                panic!("There was a problem  {:?}", error)
-            },
+            Err(error) => panic!("There was a problem  {:?}", error),
         };
 
-        return inserted_id
-
+        return inserted_id;
     }
 
     pub fn delete_by_id(id: i32, conn: &PgConnection) -> bool {

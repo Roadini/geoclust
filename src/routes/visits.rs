@@ -1,8 +1,7 @@
 use db::Conn as DbConn;
+use models::visits::{NewVisit, Visit};
 use rocket_contrib::json::Json;
-use models::visits::{Visit, NewVisit};
 use serde_json::Value;
-
 
 #[post("/visits", format = "application/json", data = "<new_visit>")]
 pub fn new(conn: DbConn, new_visit: Json<NewVisit>) -> Json<Value> {
@@ -33,5 +32,4 @@ pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
     Json(json!({
         "status": status,
     }))
-
 }

@@ -1,6 +1,6 @@
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 
 use schema::lists;
 use schema::lists::dsl::lists as all_lists;
@@ -36,11 +36,8 @@ impl List {
     }
 
     pub fn update_by_id(id: i32, conn: &PgConnection, list: NewList) -> bool {
-        use schema::lists::dsl::{user_id as u, list_name as n};
-        let NewList {
-            user_id,
-            list_name,
-        } = list;
+        use schema::lists::dsl::{list_name as n, user_id as u};
+        let NewList { user_id, list_name } = list;
 
         diesel::update(all_lists.find(id))
             .set((u.eq(user_id), n.eq(list_name)))

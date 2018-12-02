@@ -1,6 +1,6 @@
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 
 use schema::visits;
 use schema::visits::dsl::visits as all_visits;

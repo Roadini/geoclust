@@ -47,10 +47,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    books,
-    gspots,
-    lists,
-    spatial_ref_sys,
-    visits,
-);
+allow_tables_to_appear_in_same_query!(books, gspots, lists, spatial_ref_sys, visits,);
