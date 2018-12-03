@@ -22,7 +22,7 @@ services:
     #   - CARGO_INCREMENTAL=1
     environment:
       DATABASE_URL: "postgres://roadini:demo1234@db/geoclust"
-    command: bash -c "bash ./wait-for-it.sh db:5432 -q -- diesel setup && cargo watch -x run"
+    command: bash -c "bash ./wait-for-it.sh db:5432 -q -- diesel setup && cargo watch -x run -i *.jpeg"
     networks:
       - roadiniserver_proxynet
     container_name: geoclust_api

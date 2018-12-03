@@ -45,6 +45,7 @@ pub struct GoogleResponse {
 
 impl Candidate{
     pub fn to_gspot(from: &Candidate) -> NewGSpot{
+        println!("lat {} lng {}",from.geometry.location.lat,from.geometry.location.lng);
         let new_gspot = NewGSpot {
             name: from.name.as_str().to_string(),
             address: from.formatted_address.as_str().to_string(),
@@ -52,7 +53,7 @@ impl Candidate{
             lat: from.geometry.location.lat,
             lng: from.geometry.location.lng,
             primary_type: from.types[0].as_str().to_string(),
-            secondary_type: "Odeio a minha vida".to_string()
+            secondary_type: from.types[1].as_str().to_string()
         };
 
         new_gspot

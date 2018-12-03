@@ -5,7 +5,8 @@ use diesel::pg::PgConnection;
 use schema::gspots;
 use schema::gspots::dsl::gspots as all_gspots;
 
-#[derive(Serialize, Queryable, Debug, Clone)]
+#[derive(Serialize, Queryable,QueryableByName,Debug, Clone)]
+#[table_name = "gspots"]
 pub struct GSpot {
     pub id: i32,
     pub name: String,
@@ -66,23 +67,25 @@ impl GSpot {
     //        .is_ok()
     //}
 
-    pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> Vec<i32> {
+    pub fn insert(gspot: NewGSpot, conn: &PgConnection) -> Result<i32, i32> {
 
-        let inserted_id = diesel::insert_into(gspots::table)
-            .values(&gspot)
-            .returning(gspots::id)
-            .get_results(conn);
+        if GSpot::get_by_google_id(gspot.google_place_id.to_string(), conn).is_empty() {
+            let inserted_id = diesel::insert_into(gspots::table)
+                .values(&gspot)
+                .returning(gspots::id)
+                .get_results(conn);
+            let inserted_id = match inserted_id{
+                Ok(inserted_id) => inserted_id,
+                Err(error) => {
+                    panic!("There was a problem  {:?}", error)
+                },
+            };
 
+            return Ok(inserted_id[0]);
+        }
 
-
-        let inserted_id = match inserted_id{
-            Ok(inserted_id) => inserted_id,
-            Err(error) => {
-                panic!("There was a problem  {:?}", error)
-            },
-        };
-
-        return inserted_id
+        println!("Google Place already on the DB");
+        return Err(0);
 
     }
 
@@ -93,12 +96,63 @@ impl GSpot {
         diesel::delete(all_gspots.find(id)).execute(conn).is_ok()
     }
 
-    // TODO ALL by Primary Type and Location
+    pub fn get_city( lat: f32,lng: f32, conn: &PgConnection) -> Vec<GSpot>{
+        let near : Vec<GSpot> = diesel::sql_query("SELECT * FROM gspots WHERE earth_box(ll_to_earth($1, $2), 10000)  @> ll_to_earth(gspots.lat, gspots.lng) AND gspots.primary_type = 'locality' AND gspots.secondary_type = 'political'")
+            .bind::<diesel::sql_types::Float, _>(lat)
+            .bind::<diesel::sql_types::Float, _>(lng)
+            .load(conn)
+            .expect("sou nabo como a merda");
 
-    //pub fn all_by_user(user_id: i32, conn: &PgConnection) -> Vec<List> {
-    //    all_lists
-    //        .filter(lists::user_id.eq(user_id))
-    //        .load::<List>(conn)
-    //        .expect("Error loading lists by User")
-    //}
+        return near;
+    }
+
+
+    pub fn get_near(lat: f32, lng: f32, conn: &PgConnection) -> Vec<GSpot> {
+        let near : Vec<GSpot> = diesel::sql_query("SELECT * FROM gspots WHERE earth_box(ll_to_earth($1,$2), 20) @> ll_to_earth(gspots.lat, gspots.lng)")
+            .bind::<diesel::sql_types::Float, _>(lat)
+            .bind::<diesel::sql_types::Float, _>(lng)
+            .load(conn)
+            .expect("sou nabo como a merda");
+
+        return near;
+    }
+
+
+    pub fn get_by_type(lat: f32, lng: f32, t: &str, conn: &PgConnection) -> Vec<GSpot> {
+        println!("Que Piça {}", t);
+        let near : Vec<GSpot> = diesel::sql_query("SELECT * FROM gspots WHERE earth_box(ll_to_earth($1, $2), 4000)  @> ll_to_earth(gspots.lat, gspots.lng) AND ( gspots.primary_type = $3 OR gspots.secondary_type = $3)")
+            .bind::<diesel::sql_types::Float, _>(lat)
+            .bind::<diesel::sql_types::Float, _>(lng)
+            .bind::<diesel::sql_types::Text, _>(t)
+            .load(conn)
+            .expect("sou nabo como a merda");
+
+        return near;
+    }
+
+    pub fn change_spot(lat_n: f32, lng_n: f32, id_i: i32, conn: &PgConnection) -> Vec<GSpot> {
+        let current = &GSpot::show(id_i, conn)[0];
+
+        let GSpot {
+            id,
+            name,
+            address,
+            google_place_id,
+            lat,
+            lng,
+            primary_type,
+            secondary_type,
+        } = current;
+
+        let near : Vec<GSpot> = diesel::sql_query("SELECT * FROM gspots WHERE earth_box(ll_to_earth($1, $2), 5000)  @> ll_to_earth(gspots.lat, gspots.lng) AND gspots.primary_type = $3 AND gspots.secondary_type = $4 AND gspots.id != $5")
+            .bind::<diesel::sql_types::Float, _>(lat_n)
+            .bind::<diesel::sql_types::Float, _>(lng_n)
+            .bind::<diesel::sql_types::Text, _>(primary_type)
+            .bind::<diesel::sql_types::Text, _>(secondary_type)
+            .bind::<diesel::sql_types::Integer, _>(id)
+            .load(conn)
+            .expect("sou nabo como a merda");
+
+        return near;
+    }
 }

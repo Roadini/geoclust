@@ -12,6 +12,7 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
+use std::collections::HashSet;
 
 #[get("/gspots", format = "application/json")]
 pub fn index(conn: DbConn) -> Json<Value> {
@@ -26,17 +27,25 @@ pub fn index(conn: DbConn) -> Json<Value> {
 #[get("/gspots?<lat>&<lng>", format = "application/json")]
 pub fn get_possible_gspots( lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
 
-    // TODO: Make this right!
-    let gspots = GSpot::all(&conn);
+    let city = GSpot::get_city(lat, lng, &conn);
+    let gspots = GSpot::get_near(lat, lng, &conn);
 
     Json(json!({
         "status": 200,
+        "address": city[0].address,
         "result": gspots,
     }))
 }
 
 #[get("/gspots/populate?<lat>&<lng>", format = "application/json")]
 pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
+
+    let viking_names: HashSet<&'static str> =
+        [   "amusement_park", "aquarium", "art_gallery", "bakery",
+            "bar","book_store","bowling_alley","cafe","casino",
+            "church","city_hall","library","liquor_store", "meal_delivery",
+            "meal_takeaway", "museum", "night_club", "restaurant", "shopping_mall",
+            "spa", "stadium", "zoo", "point_of_interest", "establishment", "food", "locality","political"].iter().cloned().collect();
 
     println!("Coordenadas. Lat: {} Lng: {}",lat, lng);
 
@@ -56,14 +65,26 @@ pub fn populate_by_coord(lat: f32, lng: f32, conn: DbConn) -> Json<Value> {
     let gr: GoogleResponse = response.json::<GoogleResponse>()
         .expect("Upsi Dupsi");
 
-    for x in &gr.candidates {
+    'outer : for x in &gr.candidates {
         let mut candidate_name = x.name.as_str();
-        let mut inserted_id : i32 = 0;
+        println!("{}",candidate_name);
+        let mut types = &x.types;
+
+        for x in types {
+            println!("{}", x);
+            if !viking_names.contains(x.as_str()) {
+                println!("We dont care about this place");
+                continue 'outer;
+            }
+        }
+
+        let mut inserted_id : Result<i32, i32>;
         println!("Adding token Candidate ... {}", candidate_name);
-        inserted_id = GSpot::insert(Candidate::to_gspot(x), &conn)[0];
+        inserted_id = GSpot::insert(Candidate::to_gspot(x), &conn);
 
-
-        populate_photos_by_coord(Candidate::get_photo_id(x), inserted_id);
+        if( inserted_id.is_ok()){
+            populate_photos_by_coord(Candidate::get_photo_id(x), inserted_id.unwrap());
+        }
     };
 
     Json(json!({
@@ -154,31 +175,23 @@ pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
 }
 
 // MAGIC STUFF
-#[get("/magic", format = "application/json")]
-pub fn get_route_suggestion(conn: DbConn) -> Json<Value> {
-    let gspots = GSpot::all(&conn);
+#[get("/magic?<lat>&<lng>&<user>", format = "application/json")]
+pub fn get_route_suggestion(lat: f32, lng: f32, user:i32, conn: DbConn) -> Json<Value> {
+
+    let restaurant = GSpot::get_by_type(lat, lng, "restaurant",&conn);
 
     Json(json!({
         "status": 200,
-        "result": gspots,
+        "result": restaurant,
     }))
 }
 
-#[get("/magic?<type_of_place>", format = "application/json")]
-pub fn change_route_suggestion(type_of_place: String, conn: DbConn) -> Json<Value> {
-    println!("Tipo de lugar para alterar {}",type_of_place);
-    let gspots = GSpot::all(&conn);
+#[get("/magic/change?<lat>&<lng>&<place_id>", format = "application/json")]
+pub fn change_route_suggestion(lat: f32, lng: f32 , place_id: i32, conn: DbConn) -> Json<Value> {
+    let gspots = GSpot::change_spot(lat, lng, place_id, &conn);
 
     Json(json!({
         "status": 200,
         "result": gspots.get(0),
     }))
 }
-
-//#[catch(404)]
-//fn not_found() -> Json<Value> {
-//    Json(json!({
-//        "status": "error",
-//        "reason": "Resource was not found"
-//    }))
-//}
