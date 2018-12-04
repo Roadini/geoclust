@@ -178,11 +178,22 @@ pub fn delete(id: i32, conn: DbConn) -> Json<Value> {
 #[get("/magic?<lat>&<lng>&<user>", format = "application/json")]
 pub fn get_route_suggestion(lat: f32, lng: f32, user:i32, conn: DbConn) -> Json<Value> {
 
-    let restaurant = GSpot::get_by_type(lat, lng, "restaurant",&conn);
+    let mut vec = Vec::new();
+
+    // NOT VERY NICE BUT I DON'T WANT THE GRAB AND GO TO SHOW
+    let restaurant = GSpot::get_by_type(lat, lng, "restaurant",&conn).remove(1);
+    vec.push(restaurant);
+
+    let mut museums = GSpot::get_by_type(lat, lng, "museum",&conn);
+    vec.push(museums.remove(0));
+    vec.push(museums.remove(1));
+
+    let cafe = GSpot::get_by_type(lat, lng, "cafe",&conn).remove(1);
+    vec.push(cafe);
 
     Json(json!({
         "status": 200,
-        "result": restaurant,
+        "result": vec,
     }))
 }
 
@@ -192,6 +203,6 @@ pub fn change_route_suggestion(lat: f32, lng: f32 , place_id: i32, conn: DbConn)
 
     Json(json!({
         "status": 200,
-        "result": gspots.get(0),
+        "result": gspots,
     }))
 }
